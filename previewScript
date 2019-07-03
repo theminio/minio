@@ -1,0 +1,7 @@
+echo "This will take about 22-35 seconds to update and run minio browser :)"
+cd browser
+./node_modules/.bin/webpack -p --config webpack.production.config.js
+npm run release
+cd ..
+make
+./minio server start

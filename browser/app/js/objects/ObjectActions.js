@@ -19,6 +19,7 @@ import { connect } from "react-redux"
 import { Dropdown } from "react-bootstrap"
 import ShareObjectModal from "./ShareObjectModal"
 import DeleteObjectConfirmModal from "./DeleteObjectConfirmModal"
+import PreviewObjectModal from "./PreviewObjectModal"
 import * as objectsActions from "./actions"
 import {
   SHARE_OBJECT_EXPIRY_DAYS,
@@ -30,6 +31,7 @@ export class ObjectActions extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      showPreview: false,
       showDeleteConfirmation: false
     }
   }
@@ -56,6 +58,15 @@ export class ObjectActions extends React.Component {
       showDeleteConfirmation: false
     })
   }
+  showPreviewModal(e) {
+    e.preventDefault()
+    this.setState({ showPreview: true })
+  }
+  hidePreviewModal() {
+    this.setState({
+      showPreview: false
+    })
+  }
   render() {
     const { object, showShareObjectModal, shareObjectName } = this.props
     return (
@@ -76,6 +87,13 @@ export class ObjectActions extends React.Component {
           >
             <i className="fa fa-trash" />
           </a>
+          <a
+            href=""
+            className="fiad-action"
+            onClick={this.showPreviewModal.bind(this)}
+          >
+            <i className="fa fa-eye" />
+          </a>
         </Dropdown.Menu>
         {(showShareObjectModal && shareObjectName === object.name) &&
           <ShareObjectModal object={object} />}
@@ -83,6 +101,12 @@ export class ObjectActions extends React.Component {
           <DeleteObjectConfirmModal
             deleteObject={this.deleteObject.bind(this)}
             hideDeleteConfirmModal={this.hideDeleteConfirmModal.bind(this)}
+          />
+        )}
+        {this.state.showPreview && (
+          <PreviewObjectModal
+            objectName={object.name}
+            hidePreviewModal={this.hidePreviewModal.bind(this)}
           />
         )}
       </Dropdown>
