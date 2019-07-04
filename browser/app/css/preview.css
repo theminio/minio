@@ -1,0 +1,39 @@
+.NameCell {
+    text-align : left;
+    padding : 1%;
+}
+
+.DataCell, .HeaderCell {
+    text-align : center;
+    padding : 0.2em;
+    border: 1px solid black;
+}
+
+.Header {
+    color : white;
+    background-color : dimgrey;
+}
+
+.Row:hover {
+    background-color : green;
+}
+
+.Row {
+    color : black;
+}
+
+.Row:nth-child(even) {
+    background-color : white
+}
+
+.Row:nth-child(odd) {
+    background-color : #e7e4e4
+}
+
+.Row:nth-child(even):hover {
+    filter : brightness(65%)
+}
+
+.Row:nth-child(odd):hover {
+    filter : brightness(85%)
+}

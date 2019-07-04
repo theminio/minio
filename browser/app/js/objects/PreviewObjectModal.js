@@ -15,39 +15,209 @@
  */
 
 import React from "react"
-import { connect } from "react-redux"
 import { Modal, ModalBody, ModalHeader, ModalTitle, ModalFooter } from "react-bootstrap"
-
-const GetPreviewContent = (bucketName, objectName, folderPrefix, accessKey, secretKey) => {
-    console.log(bucketName)
-    console.log(folderPrefix)
-    console.log(accessKey)
-    console.log(secretKey)
-    return objectName
-}
+import '../../css/preview.css'
 
 export class PreviewObjectModal extends React.Component {
     constructor(props) {
         super(props)
-    }
+
+        this.state = {
+            previewContent : ""
+        }
+
+        const {bucketName, objectName, folderPrefix, accessKey, secretKey} = props
+
+        let extension = objectName.split(".").pop()
+    
+        const mapExtensionToElementType = {
+            mp3 : "VIDEO",
+            mp4 : "VIDEO",
+            avi : "VIDEO",
+            png : "IMAGE",
+            jpg : "IMAGE",
+            jpeg : "IMAGE",
+            gif : "IMAGE",
+            tif : "IMAGE",
+            csv : "CSV",
+            avsc : "AVRO",
+            avro : "AVRO",
+            txt : "TXT"
+        }
+    
+        if((!(objectName.includes("."))) || (!(extension in mapExtensionToElementType))) {
+            extension = "txt"
+        }
+
+        const getApiURL = () => {
+            const portPreview = ":8080"
+            if(window.location.protocol === "https:") {
+                let oldHostName = window.location.hostname
+                let updatedHostName = oldHostName.split('.')[0] + "-preview"
+
+                return window.location.protocol + "//" + updatedHostName + 
+                       oldHostName.substring(oldHostName.indexOf(".")) + portPreview
+            }
+
+            return "http://127.0.0.1" + portPreview
+        }
+    
+        let previewContent = () => {
+            const API_URL = getApiURL()
+            console.log(API_URL)
+            const requestInfo = {
+                bucketName : bucketName,
+                folderPrefix : folderPrefix,
+                objectName : objectName,
+            }
+            fetch(API_URL + "/preview", {
+                headers : {
+                    "Accept" : "application/json",
+                    "Content-Type" : "application/json"
+                },
+                method : "POST",
+                body : JSON.stringify(requestInfo)
+            })
+            .then(response => response.json())
+            .then(responseData => {
+                let previewHeaders, previewData
+                const tableStyle = {
+                    margin : "auto"
+                }
+                const imageOrVideoStyle = {
+                    width : "100%"
+                }
+                const mapElementTypeToComponent = {
+                    VIDEO : () => {
+                        let videoType = "video/" + extension
+        
+                        return (
+                            <video controls style={imageOrVideoStyle}>
+                                <source src={responseData} type={videoType}/>
+                            </video>
+                        )
+                    },
+                    IMAGE : () => {
+                        return (
+                            <img src={responseData} alt="" style={imageOrVideoStyle}/>
+                        )
+                    },
+                    CSV : () => {        
+                        let headers = responseData[0].split(",")
+                        let data = responseData.slice(1)
+                        previewHeaders = headers.map(previewHeader => {
+                            return (
+                                <th key={previewHeader} className="HeaderCell">
+                                    {previewHeader}
+                                </th>
+                            )
+                        })
+                        previewData = data.map((rowData, rowIndex) => {
+                            let row = rowData.split(",")
+                            let rowResult = row.map((rowCell, colIndex) => {
+                                return (
+                                    <td key={"" + rowIndex + ":" + colIndex} className="DataCell">{rowCell}</td>
+                                )
+                            })
+                            return (
+                                <tr key={rowIndex} className="Row">
+                                    {rowResult}
+                                </tr>
+                            )
+                        })
+                        return (
+                            <table style={tableStyle}>
+                                <thead>
+                                    <tr className="Header">
+                                        {previewHeaders}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {previewData}
+                                </tbody>
+                            </table>
+                        )
+                    },
+                    AVRO : () => {
+                        let fields = JSON.parse(responseData)["fields"]
+                        previewHeaders = ["Field", "Type"].map(previewHeader => {
+                            return (
+                                <th key={previewHeader} className="HeaderCell">
+                                    {previewHeader}
+                                </th>
+                            )
+                        })
+                        previewData = fields.map(field => {
+                            return (
+                                <tr key={field["name"]} className="Row">
+                                    <td className="DataCell">{field["name"]}</td>
+                                    <td className="DataCell">{field["type"]}</td>
+                                </tr>
+                            )
+                        })
+                        return (
+                            <table style={tableStyle}>
+                                <thead>
+                                    <tr className="Header">
+                                        {previewHeaders}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {previewData}
+                                </tbody>
+                            </table>
+                        )
+                    },
+                    TXT : () => {
+                        let textStyle = {
+                            textAlign : "left"
+                        }
+                        let rows = responseData.split("\r\n").map((row, index) => {
+                            return (
+                                <h5 key={index}>{row}</h5>
+                            )
+                        })
+        
+                        return (
+                            <div style={textStyle}>{rows}</div>
+                        )
+                    }
+                }
+                
+                this.setState({
+                    previewContent : mapElementTypeToComponent[mapExtensionToElementType[extension]]()
+                })
+            })
+        }
+
+        previewContent()
+    }   
 
     render() {
-        const {currentBucket, objectName, currentPrefix, hidePreviewModal, accessKey, secretKey} = this.props
+        const {objectName, hidePreviewModal} = this.props
+        const modalStyle = {
+            // width : "90vw"
+        }
+        const contentStyle = {
+            overflowX : "auto",
+        }
 
         return(
     <Modal
-      bsSize="small"
-      animation={false}
+    //   bsSize="small"
+    //   animation={false}
       show={true}
       className={"modal-confirm "}
-    >
+      aria-labelledby="contained-modal-title-vcenter"
+      style={modalStyle}
+      centered={true}
+      scrollable={true}
+      >
       <ModalHeader>
           <ModalTitle>{objectName}</ModalTitle>
       </ModalHeader>
-      <ModalBody>
-        <div className="mc-text">
-            WOW{GetPreviewContent(currentBucket, objectName, currentPrefix, accessKey, secretKey)}
-        </div>
+      <ModalBody style={contentStyle}>
+        {this.state.previewContent}
       </ModalBody>
       <ModalFooter>
         <button className="btn btn-link" onClick={hidePreviewModal}>
@@ -59,13 +229,4 @@ export class PreviewObjectModal extends React.Component {
     }
 }
 
-const mapStateToProps = state => {
-    return {
-      currentBucket: state.buckets.currentBucket,
-      currentPrefix: state.objects.currentPrefix,
-      accessKey: state.browser.accessKey,
-      secretKey: state.browser.secretKey,
-    }
-}
-
-export default connect(mapStateToProps)(PreviewObjectModal)
+export default PreviewObjectModal

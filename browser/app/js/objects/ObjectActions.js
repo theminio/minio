@@ -68,7 +68,7 @@ export class ObjectActions extends React.Component {
     })
   }
   render() {
-    const { object, showShareObjectModal, shareObjectName } = this.props
+    const { object, currentBucket, currentPrefix, showShareObjectModal, shareObjectName } = this.props
     return (
       <Dropdown id={`obj-actions-${object.name}`}>
         <Dropdown.Toggle noCaret className="fia-toggle" />
@@ -105,6 +105,8 @@ export class ObjectActions extends React.Component {
         )}
         {this.state.showPreview && (
           <PreviewObjectModal
+            bucketName={currentBucket}
+            folderPrefix={currentPrefix}
             objectName={object.name}
             hidePreviewModal={this.hidePreviewModal.bind(this)}
           />
@@ -116,6 +118,8 @@ export class ObjectActions extends React.Component {
 
 const mapStateToProps = (state, ownProps) => {
   return {
+    currentBucket: state.buckets.currentBucket,
+    currentPrefix: state.objects.currentPrefix,    
     object: ownProps.object,
     showShareObjectModal: state.objects.shareObject.show,
     shareObjectName: state.objects.shareObject.object
