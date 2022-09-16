@@ -59,7 +59,7 @@
     "webpack-dev-server": "^3.1.14"
   },
   "dependencies": {
-    "bootstrap": "^3.3.6",
+    "bootstrap": "^3.4.1",
     "classnames": "^2.2.3",
     "expect": "^1.20.2",
     "font-awesome": "^4.7.0",
